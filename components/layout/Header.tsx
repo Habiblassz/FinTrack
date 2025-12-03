@@ -3,6 +3,7 @@
 import { Wallet, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import LoginButton from "../ui/LoginButton";
 
 export default function Header() {
 	const { theme, setTheme } = useTheme();
@@ -29,6 +30,7 @@ export default function Header() {
 						</p>
 					</div>
 				</div>
+				<LoginButton />
 
 				{mounted && (
 					<button

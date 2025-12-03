@@ -1,3 +1,4 @@
+import { User } from "firebase/auth";
 import { LucideIcon } from "lucide-react";
 
 export interface Expense {
@@ -56,6 +57,8 @@ export interface Calculations {
 }
 
 export interface FinanceContextType {
+	user: User | null;
+	loading: boolean;
 	financialData: FinancialData;
 	calculations: Calculations;
 	addExpense: (expense: Omit<Expense, "id">) => void;
