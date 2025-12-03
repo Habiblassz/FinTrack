@@ -1,7 +1,6 @@
 "use client";
 
 import { StatCardProps } from "@/types/finance";
-import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
 export default function StatCard({
@@ -12,13 +11,6 @@ export default function StatCard({
 	color,
 }: StatCardProps) {
 	const [formattedValue, setFormattedValue] = useState("");
-
-	const { theme } = useTheme();
-
-	const isDark = theme === "dark";
-	const cardBg = isDark ? "bg-slate-800" : "bg-white";
-	const textPrimary = isDark ? "text-white" : "text-gray-900";
-	const borderColor = isDark ? "border-slate-700" : "border-gray-200";
 
 	useEffect(() => {
 		const formatValue = (val: number) =>
@@ -33,18 +25,19 @@ export default function StatCard({
 	}, [value]);
 
 	return (
-		<div
-			className={`${cardBg} rounded-2xl p-6 shadow-md border ${borderColor} transition-all hover:shadow-lg`}>
+		<div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-md border border-gray-200 dark:border-slate-700 transition-all hover:shadow-lg">
 			<div className="flex items-center gap-2">
 				<div
 					className={`p-2 rounded-lg flex items-center justify-center ${color}`}>
 					<Icon size={16} className="text-white" />
 				</div>
-				<p className={`text-sm font-medium ${textPrimary}`}>{title}</p>
+				<p className="text-sm font-medium text-gray-900 dark:text-white">
+					{title}
+				</p>
 			</div>
 
 			{/* Value */}
-			<h3 className={`text-3xl font-bold ${textPrimary} mt-3`}>
+			<h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-3">
 				{formattedValue || (
 					<span className="invisible">{`$${value.toFixed(2)}`}</span>
 				)}

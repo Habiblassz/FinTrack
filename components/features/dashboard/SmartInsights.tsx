@@ -2,7 +2,6 @@
 
 import { TrendingUp, Target, AlertTriangle, PiggyBank } from "lucide-react";
 import { SmartInsightsProps } from "@/types/finance";
-import { useTheme } from "next-themes";
 
 export default function SmartInsights({
 	expenses,
@@ -80,7 +79,7 @@ export default function SmartInsights({
 			});
 		}
 
-		// Default positive insight if no warnings
+		// Default positive insight
 		if (insights.length === 0) {
 			insights.push({
 				icon: TrendingUp,
@@ -108,17 +107,9 @@ export default function SmartInsights({
 		return colors[color as keyof typeof colors] || colors.emerald;
 	};
 
-	const { theme } = useTheme();
-
-	const isDark = theme === "dark";
-	const cardBg = isDark ? "bg-slate-800" : "bg-white";
-	const textPrimary = isDark ? "text-white" : "text-gray-900";
-	const borderColor = isDark ? "border-slate-700" : "border-gray-200";
-
 	return (
-		<div
-			className={`${cardBg} rounded-2xl p-6 shadow-md border ${borderColor}`}>
-			<h2 className={`text-xl font-semibold ${textPrimary} mb-4`}>
+		<div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-md border border-gray-200 dark:border-slate-700">
+			<h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
 				💡 Smart Insights
 			</h2>
 			<div className="space-y-3">

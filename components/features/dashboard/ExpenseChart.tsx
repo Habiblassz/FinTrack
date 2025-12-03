@@ -13,6 +13,9 @@ import { ExpenseChartProps, TooltipProps } from "@/types/finance";
 import { useTheme } from "next-themes";
 
 export default function ExpenseChart({ trendData }: ExpenseChartProps) {
+	const { theme } = useTheme();
+	const isDark = theme === "dark";
+
 	const formatCurrency = (value: number) => {
 		return new Intl.NumberFormat("en-US", {
 			style: "currency",
@@ -21,20 +24,11 @@ export default function ExpenseChart({ trendData }: ExpenseChartProps) {
 		}).format(value);
 	};
 
-	const { theme } = useTheme();
-
-	const isDark = theme === "dark";
-	const cardBg = isDark ? "bg-slate-800" : "bg-white";
-	const textPrimary = isDark ? "text-white" : "text-gray-900";
-	const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
-	const borderColor = isDark ? "border-slate-700" : "border-gray-200";
-
 	const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 		if (active && payload && payload.length) {
 			return (
-				<div
-					className={`${cardBg} p-4 rounded-lg shadow-lg border ${borderColor}`}>
-					<p className={`font-semibold ${textPrimary}`}>{label}</p>
+				<div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700">
+					<p className="font-semibold text-gray-900 dark:text-white">{label}</p>
 					<p className="text-emerald-600">
 						Income: {formatCurrency(payload[0]?.value)}
 					</p>
@@ -51,9 +45,8 @@ export default function ExpenseChart({ trendData }: ExpenseChartProps) {
 	};
 
 	return (
-		<div
-			className={`${cardBg} rounded-2xl p-6 shadow-md border ${borderColor}`}>
-			<h2 className={`text-xl font-semibold ${textSecondary} mb-4`}>
+		<div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-md border border-gray-200 dark:border-slate-700">
+			<h2 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-4">
 				Income vs Expenses Trend
 			</h2>
 			<ResponsiveContainer width="100%" height={300}>
@@ -70,17 +63,11 @@ export default function ExpenseChart({ trendData }: ExpenseChartProps) {
 					</defs>
 					<CartesianGrid
 						strokeDasharray="3 3"
-						stroke="#e5e7eb"
-						className="dark:stroke-slate-600"
+						stroke={isDark ? "#475569" : "#e5e7eb"}
 					/>
-					<XAxis
-						dataKey="month"
-						stroke="#6b7280"
-						className="dark:stroke-slate-400"
-					/>
+					<XAxis dataKey="month" stroke={isDark ? "#94a3b8" : "#6b7280"} />
 					<YAxis
-						stroke="#6b7280"
-						className="dark:stroke-slate-400"
+						stroke={isDark ? "#94a3b8" : "#6b7280"}
 						tickFormatter={formatCurrency}
 					/>
 					<Tooltip content={<CustomTooltip />} />
