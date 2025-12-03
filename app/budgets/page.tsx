@@ -1,15 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import BudgetProgress from "@/components/features/budgets/BudgetProgress";
 import SavingsGoal from "@/components/features/budgets/SavingsGoal";
+import EditBudgetModal from "@/components/features/budgets/EditBudgetModal";
 import { useFinanceContext } from "@/context/FinanceContext";
+import { Budget } from "@/types/finance";
 
 export default function BudgetsPage() {
-	const { financialData } = useFinanceContext();
+	const { financialData, updateBudget } = useFinanceContext();
+	const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
 
 	const currentMonthName = new Date().toLocaleString("default", {
 		month: "long",
 	});
+
+	const handleSaveBudget = (amount: number) => {
+		if (editingBudget) {
+			updateBudget(editingBudget.category, amount);
+			setEditingBudget(null);
+		}
+	};
 
 	return (
 		<div className="space-y-6">
@@ -29,6 +40,7 @@ export default function BudgetsPage() {
 						category={budget.category}
 						spent={budget.spent}
 						budget={budget.budget}
+						onEdit={() => setEditingBudget(budget)}
 					/>
 				))}
 			</div>
@@ -37,6 +49,16 @@ export default function BudgetsPage() {
 				currentSavings={financialData.currentSavings}
 				savingsGoal={financialData.savingsGoal}
 			/>
+
+			{editingBudget && (
+				<EditBudgetModal
+					isOpen={!!editingBudget}
+					onClose={() => setEditingBudget(null)}
+					category={editingBudget.category}
+					currentBudget={editingBudget.budget}
+					onSave={handleSaveBudget}
+				/>
+			)}
 		</div>
 	);
 }
