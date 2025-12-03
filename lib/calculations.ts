@@ -1,4 +1,14 @@
-import { Expense, TrendData, CategorySpending } from "@/types/finance";
+import {
+	Expense,
+	TrendData,
+	CategorySpending,
+	BudgetStatus,
+} from "@/types/finance";
+
+export const getCurrentMonthISO = () => {
+	const now = new Date();
+	return now.toISOString().slice(0, 7);
+};
 
 export const calculateTrendData = (
 	expenses: Expense[],
@@ -15,6 +25,7 @@ export const calculateTrendData = (
 	});
 
 	return Object.entries(monthlyData)
+		.sort((a, b) => a[0].localeCompare(b[0]))
 		.map(([month, data]) => ({
 			month: new Date(month + "-01").toLocaleDateString("en-US", {
 				month: "short",
@@ -30,10 +41,15 @@ export const calculateTrendData = (
 export const calculateCategorySpending = (
 	expenses: Expense[]
 ): CategorySpending[] => {
-	const categoryTotals: { [key: string]: number } = {};
-	const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+	const currentMonth = getCurrentMonthISO();
+	const monthlyExpenses = expenses.filter((e) =>
+		e.date.startsWith(currentMonth)
+	);
 
-	expenses.forEach((expense) => {
+	const categoryTotals: { [key: string]: number } = {};
+	const total = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+	monthlyExpenses.forEach((expense) => {
 		categoryTotals[expense.category] =
 			(categoryTotals[expense.category] || 0) + expense.amount;
 	});
@@ -51,12 +67,6 @@ export const calculateSavingsRate = (
 ): number => {
 	return income > 0 ? ((income - expenses) / income) * 100 : 0;
 };
-
-export interface BudgetStatus {
-	percentage: number;
-	isOverBudget: boolean;
-	remaining: number;
-}
 
 export const getBudgetStatus = (
 	spent: number,

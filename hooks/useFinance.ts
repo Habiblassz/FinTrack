@@ -4,6 +4,7 @@ import {
 	calculateTrendData,
 	calculateCategorySpending,
 	calculateSavingsRate,
+	getCurrentMonthISO,
 } from "@/lib/calculations";
 import { useLocalStorage } from "@/context/useLocalStorage";
 
@@ -12,6 +13,7 @@ export const useFinance = () => {
 		"financial-data",
 		{
 			expenses: [],
+
 			budgets: [
 				{ category: "Food", budget: 500, spent: 0 },
 				{ category: "Bills", budget: 300, spent: 0 },
@@ -30,38 +32,22 @@ export const useFinance = () => {
 			id: Date.now().toString(),
 		};
 
-		setFinancialData((prev) => {
-			const updatedExpenses = [...prev.expenses, newExpense];
+		setFinancialData((prev) => ({
+			...prev,
+			expenses: [...prev.expenses, newExpense],
 
-			// Update budget spending
-			const updatedBudgets = prev.budgets.map((budget) => ({
-				...budget,
-				spent: updatedExpenses
-					.filter((exp) => exp.category === budget.category)
-					.reduce((sum, exp) => sum + exp.amount, 0),
-			}));
-
-			// Update savings based on income and expenses
-			const totalExpenses = updatedExpenses.reduce(
-				(sum, exp) => sum + exp.amount,
-				0
-			);
-			const newSavings =
-				prev.currentSavings + (prev.monthlyIncome - totalExpenses);
-
-			return {
-				...prev,
-				expenses: updatedExpenses,
-				budgets: updatedBudgets,
-				currentSavings: Math.max(0, newSavings),
-			};
-		});
+			currentSavings: prev.currentSavings - newExpense.amount,
+		}));
 	};
 
 	const deleteExpense = (id: string) => {
+		const expenseToDelete = financialData.expenses.find((e) => e.id === id);
+		if (!expenseToDelete) return;
+
 		setFinancialData((prev) => ({
 			...prev,
 			expenses: prev.expenses.filter((exp) => exp.id !== id),
+			currentSavings: prev.currentSavings + expenseToDelete.amount,
 		}));
 	};
 
@@ -74,33 +60,59 @@ export const useFinance = () => {
 		}));
 	};
 
-	const calculations = useMemo(() => {
-		const totalExpenses = financialData.expenses.reduce(
+	const processedData = useMemo(() => {
+		const currentMonthISO = getCurrentMonthISO();
+
+		const monthlyExpenses = financialData.expenses.filter((e) =>
+			e.date.startsWith(currentMonthISO)
+		);
+
+		const totalMonthlyExpenses = monthlyExpenses.reduce(
 			(sum, exp) => sum + exp.amount,
 			0
 		);
+
+		const budgetsWithLiveSpending = financialData.budgets.map((b) => {
+			const spentThisMonth = monthlyExpenses
+				.filter((e) => e.category === b.category)
+				.reduce((sum, e) => sum + e.amount, 0);
+
+			return {
+				...b,
+				spent: spentThisMonth,
+			};
+		});
+
 		const trendData = calculateTrendData(
 			financialData.expenses,
 			financialData.monthlyIncome
 		);
+
 		const categorySpending = calculateCategorySpending(financialData.expenses);
+
 		const savingsRate = calculateSavingsRate(
 			financialData.monthlyIncome,
-			totalExpenses
+			totalMonthlyExpenses
 		);
 
 		return {
-			totalExpenses,
-			trendData,
-			categorySpending,
-			savingsRate,
-			totalBalance: financialData.currentSavings,
+			financialData: {
+				...financialData,
+				budgets: budgetsWithLiveSpending,
+			},
+			calculations: {
+				totalExpenses: totalMonthlyExpenses,
+				trendData,
+				categorySpending,
+				savingsRate,
+				totalBalance: financialData.currentSavings,
+			},
 		};
 	}, [financialData]);
 
 	return {
-		financialData,
-		calculations,
+		financialData: processedData.financialData,
+		calculations: processedData.calculations,
 		addExpense,
 		deleteExpense,
 		updateBudget,

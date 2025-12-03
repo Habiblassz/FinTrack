@@ -8,34 +8,16 @@ export interface Expense {
 	date: string;
 }
 
-export interface ExpenseChartProps {
-	trendData: TrendData[];
-}
-
-export interface ExpenseFormProps {
-	onSubmit: (expense: Omit<Expense, "id">) => void;
-	onCancel: () => void;
-}
-
-export interface ExpenseListProps {
-	expenses: Expense[];
-	onDelete: (id: string) => void;
-}
-
-export interface TooltipProps {
-	active?: boolean;
-	payload?: Array<{
-		value: number;
-		dataKey: string;
-		payload: TrendData;
-	}>;
-	label?: string;
-}
-
 export interface Budget {
 	category: string;
 	budget: number;
 	spent: number;
+}
+
+export interface BudgetStatus {
+	percentage: number;
+	isOverBudget: boolean;
+	remaining: number;
 }
 
 export interface BudgetProgressProps {
@@ -44,33 +26,12 @@ export interface BudgetProgressProps {
 	budget: number;
 }
 
-export interface SavingsGoalProps {
-	currentSavings: number;
-	savingsGoal: number;
-}
-
-export interface DashboardOverviewProps {
-	totalBalance: number;
-	monthlyIncome: number;
-	totalExpenses: number;
-	currentSavings: number;
-	savingsGoal: number;
-	savingsRate: number;
-}
-
 export interface FinancialData {
 	expenses: Expense[];
 	budgets: Budget[];
 	monthlyIncome: number;
 	savingsGoal: number;
 	currentSavings: number;
-}
-
-export interface ChartDataInput {
-	name: string;
-	value: number;
-	percentage?: number;
-	[key: string]: string | number | undefined;
 }
 
 export interface TrendData {
@@ -103,6 +64,35 @@ export interface FinanceContextType {
 	setFinancialData: (data: FinancialData) => void;
 }
 
+export interface StatCardProps {
+	icon: LucideIcon;
+	title: string;
+	value: number;
+	trend?: {
+		positive: boolean;
+		text: string;
+	};
+	color: string;
+}
+
+export interface SavingsGoalProps {
+	currentSavings: number;
+	savingsGoal: number;
+}
+
+export interface DashboardOverviewProps {
+	totalBalance: number;
+	monthlyIncome: number;
+	totalExpenses: number;
+	currentSavings: number;
+	savingsGoal: number;
+	savingsRate: number;
+}
+
+export interface ExpenseChartProps {
+	trendData: TrendData[];
+}
+
 export interface SmartInsightsProps {
 	expenses: Expense[];
 	budgets: Budget[];
@@ -118,7 +108,11 @@ export interface CategoryPieChartProps {
 export interface PieTooltipProps {
 	active?: boolean;
 	payload?: Array<{
-		payload: ChartDataInput;
+		payload: {
+			name: string;
+			value: number;
+			percentage?: number;
+		};
 	}>;
 }
 
@@ -143,23 +137,12 @@ export interface TooltipProps {
 	label?: string;
 }
 
-export interface MobileNavProps {
-	currentPage: string;
-	setCurrentPage: (page: string) => void;
+export interface ExpenseFormProps {
+	onSubmit: (expense: Omit<Expense, "id">) => void;
+	onCancel: () => void;
 }
 
-export interface SidebarProps {
-	currentPage: string;
-	setCurrentPage: (page: string) => void;
-}
-
-export interface StatCardProps {
-	icon: LucideIcon;
-	title: string;
-	value: number;
-	trend?: {
-		positive: boolean;
-		text: string;
-	};
-	color: string;
+export interface ExpenseListProps {
+	expenses: Expense[];
+	onDelete: (id: string) => void;
 }
