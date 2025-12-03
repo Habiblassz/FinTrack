@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { FinanceProvider } from "@/context/FinanceContext";
 import { ThemeProvider } from "@/components/themeProvider";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
+import MobileNav from "@/components/layout/MobileNav";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,9 +21,19 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={inter.className}>
+			<body
+				className={`${inter.className} min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300`}>
 				<FinanceProvider>
-					<ThemeProvider>{children}</ThemeProvider>
+					<ThemeProvider>
+						<div className="max-w-7xl mx-auto px-4 py-6">
+							<Header />
+							<div className="flex gap-6">
+								<Sidebar />
+								<main className="flex-1">{children}</main>
+							</div>
+							<MobileNav />
+						</div>
+					</ThemeProvider>
 				</FinanceProvider>
 			</body>
 		</html>

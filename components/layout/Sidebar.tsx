@@ -1,6 +1,7 @@
 "use client";
 
-import { SidebarProps } from "@/types/finance";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
 	Home,
 	Receipt,
@@ -9,46 +10,42 @@ import {
 	User,
 	LucideIcon,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 
-export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
-	const { theme } = useTheme();
-	const isDark = theme === "dark";
+export default function Sidebar() {
+	const pathname = usePathname();
 
-	const cardBg = isDark ? "bg-slate-800" : "bg-white";
-	const textSecondary = isDark ? "text-gray-300" : "text-gray-600";
-	const borderColor = isDark ? "border-slate-700" : "border-gray-200";
+	// Helper to determine if link is active
+	const isActive = (path: string) => pathname === path;
 
 	const NavButton = ({
 		icon: Icon,
 		label,
-		page,
+		href,
 	}: {
 		icon: LucideIcon;
 		label: string;
-		page: string;
+		href: string;
 	}) => (
-		<button
-			onClick={() => setCurrentPage(page)}
+		<Link
+			href={href}
 			className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all ${
-				currentPage === page
+				isActive(href)
 					? "bg-emerald-500 text-white"
-					: `${textSecondary} hover:bg-gray-200 dark:hover:bg-slate-700`
+					: "text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700"
 			}`}>
 			<Icon size={20} />
 			<span className="font-medium">{label}</span>
-		</button>
+		</Link>
 	);
 
 	return (
-		<aside
-			className={`hidden md:block w-64 ${cardBg} rounded-2xl p-4 shadow-md border ${borderColor}`}>
+		<aside className="hidden md:block w-64 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border border-gray-200 dark:border-slate-700">
 			<nav className="space-y-2">
-				<NavButton icon={Home} label="Dashboard" page="dashboard" />
-				<NavButton icon={Receipt} label="Expenses" page="expenses" />
-				<NavButton icon={Target} label="Budgets" page="budgets" />
-				<NavButton icon={BarChart3} label="Insights" page="insights" />
-				<NavButton icon={User} label="Profile" page="profile" />
+				<NavButton icon={Home} label="Dashboard" href="/dashboard" />
+				<NavButton icon={Receipt} label="Expenses" href="/expenses" />
+				<NavButton icon={Target} label="Budgets" href="/budgets" />
+				<NavButton icon={BarChart3} label="Insights" href="/insights" />
+				<NavButton icon={User} label="Profile" href="/profile" />
 			</nav>
 		</aside>
 	);
