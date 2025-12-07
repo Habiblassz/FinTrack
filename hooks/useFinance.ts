@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Expense, FinancialData } from "@/types/finance";
+import { Expense, FinancialData, Budget } from "@/types/finance";
 import {
 	calculateTrendData,
 	calculateCategorySpending,
@@ -12,14 +12,9 @@ import { doc, onSnapshot, setDoc } from "firebase/firestore";
 
 const DEFAULT_DATA: FinancialData = {
 	expenses: [],
-	budgets: [
-		{ category: "Food", budget: 500, spent: 0 },
-		{ category: "Bills", budget: 300, spent: 0 },
-		{ category: "Transport", budget: 200, spent: 0 },
-		{ category: "Entertainment", budget: 150, spent: 0 },
-	],
-	monthlyIncome: 4500,
-	savingsGoal: 10000,
+	budgets: [],
+	monthlyIncome: 0,
+	savingsGoal: 0,
 	currentSavings: 0,
 };
 
@@ -66,28 +61,51 @@ export const useFinance = () => {
 		}
 	};
 
+	const updateBalance = (amount: number) => {
+		const newData = {
+			...financialData,
+			currentSavings: amount,
+		};
+		saveData(newData);
+	};
+
+	const addBudget = (category: string, amount: number) => {
+		if (financialData.budgets.some((b) => b.category === category)) return;
+
+		const newBudget: Budget = { category, budget: amount, spent: 0 };
+		const newData = {
+			...financialData,
+			budgets: [...financialData.budgets, newBudget],
+		};
+		saveData(newData);
+	};
+
+	const deleteBudget = (category: string) => {
+		const newData = {
+			...financialData,
+			budgets: financialData.budgets.filter((b) => b.category !== category),
+		};
+		saveData(newData);
+	};
+
 	const addExpense = (expense: Omit<Expense, "id">) => {
 		const newExpense = { ...expense, id: Date.now().toString() };
-
 		const newData = {
 			...financialData,
 			expenses: [...financialData.expenses, newExpense],
 			currentSavings: financialData.currentSavings - newExpense.amount,
 		};
-
 		saveData(newData);
 	};
 
 	const deleteExpense = (id: string) => {
 		const expenseToDelete = financialData.expenses.find((e) => e.id === id);
 		if (!expenseToDelete) return;
-
 		const newData = {
 			...financialData,
 			expenses: financialData.expenses.filter((exp) => exp.id !== id),
 			currentSavings: financialData.currentSavings + expenseToDelete.amount,
 		};
-
 		saveData(newData);
 	};
 
@@ -101,6 +119,52 @@ export const useFinance = () => {
 		saveData(newData);
 	};
 
+	const updateIncome = (amount: number) => {
+		const newData = {
+			...financialData,
+			monthlyIncome: amount,
+		};
+		saveData(newData);
+	};
+
+	const updateExpense = (id: string, updatedExpense: Omit<Expense, "id">) => {
+		const oldExpense = financialData.expenses.find((e) => e.id === id);
+		if (!oldExpense) return;
+
+		const amountDiff = oldExpense.amount - updatedExpense.amount;
+
+		const newData = {
+			...financialData,
+			expenses: financialData.expenses.map((e) =>
+				e.id === id ? { ...updatedExpense, id } : e
+			),
+			currentSavings: financialData.currentSavings + amountDiff,
+		};
+		saveData(newData);
+	};
+
+	const importExpenses = async (newExpenses: Omit<Expense, "id">[]) => {
+		if (!user) return;
+
+		const expensesToAdd = newExpenses.map((e) => ({
+			...e,
+			id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+		}));
+
+		const totalImportAmount = expensesToAdd.reduce(
+			(sum, e) => sum + e.amount,
+			0
+		);
+
+		const newData = {
+			...financialData,
+			expenses: [...financialData.expenses, ...expensesToAdd],
+			currentSavings: financialData.currentSavings - totalImportAmount,
+		};
+
+		await saveData(newData);
+	};
+
 	const calculations = useMemo(() => {
 		const currentMonthISO = getCurrentMonthISO();
 		const monthlyExpenses = financialData.expenses.filter((e) =>
@@ -111,13 +175,6 @@ export const useFinance = () => {
 			(sum, exp) => sum + exp.amount,
 			0
 		);
-
-		// const budgetsWithLiveSpending = financialData.budgets.map((b) => {
-		// 	const spentThisMonth = monthlyExpenses
-		// 		.filter((e) => e.category === b.category)
-		// 		.reduce((sum, e) => sum + e.amount, 0);
-		// 	return { ...b, spent: spentThisMonth };
-		// });
 
 		const trendData = calculateTrendData(
 			financialData.expenses,
@@ -137,20 +194,6 @@ export const useFinance = () => {
 			totalBalance: financialData.currentSavings,
 		};
 	}, [financialData]);
-
-	// const uiData = {
-	// 	...financialData,
-	// 	budgets: calculations
-	// 		? calculations.totalBalance !== undefined
-	// 			? financialData.budgets.map((b) => {
-	// 					const spending = calculations.categorySpending.find(
-	// 						(c) => c.name === b.category
-	// 					);
-	// 					return { ...b, spent: spending ? spending.value : 0 };
-	// 			  })
-	// 			: financialData.budgets
-	// 		: financialData.budgets,
-	// };
 
 	const budgetsWithLiveSpending = financialData.budgets.map((b) => {
 		const currentMonthISO = getCurrentMonthISO();
@@ -172,6 +215,12 @@ export const useFinance = () => {
 		addExpense,
 		deleteExpense,
 		updateBudget,
+		updateIncome,
+		updateBalance,
+		addBudget,
+		deleteBudget,
+		updateExpense,
+		importExpenses,
 		setFinancialData,
 	};
 };

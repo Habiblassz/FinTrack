@@ -25,6 +25,7 @@ export interface BudgetProgressProps {
 	category: string;
 	spent: number;
 	budget: number;
+	onEdit?: () => void;
 }
 
 export interface FinancialData {
@@ -64,7 +65,13 @@ export interface FinanceContextType {
 	addExpense: (expense: Omit<Expense, "id">) => void;
 	deleteExpense: (id: string) => void;
 	updateBudget: (category: string, budget: number) => void;
+	updateIncome: (amount: number) => void;
+	updateExpense: (id: string, expense: Omit<Expense, "id">) => void;
+	importExpenses: (expenses: Omit<Expense, "id">[]) => Promise<void>;
 	setFinancialData: (data: FinancialData) => void;
+	updateBalance: (amount: number) => void;
+	addBudget: (category: string, amount: number) => void;
+	deleteBudget: (category: string) => void;
 }
 
 export interface StatCardProps {
@@ -141,6 +148,7 @@ export interface TooltipProps {
 }
 
 export interface ExpenseFormProps {
+	initialData?: Expense | null;
 	onSubmit: (expense: Omit<Expense, "id">) => void;
 	onCancel: () => void;
 }
@@ -148,4 +156,8 @@ export interface ExpenseFormProps {
 export interface ExpenseListProps {
 	expenses: Expense[];
 	onDelete: (id: string) => void;
+	onEdit: (expense: Expense) => void;
 }
+
+export interface MobileNavProps {}
+export interface SidebarProps {}

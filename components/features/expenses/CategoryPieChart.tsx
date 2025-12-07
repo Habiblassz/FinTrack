@@ -3,11 +3,18 @@
 import { CategoryPieChartProps, PieTooltipProps } from "@/types/finance";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const COLORS = {
+const CATEGORY_COLORS: { [key: string]: string } = {
 	Food: "#10b981",
 	Bills: "#3b82f6",
 	Transport: "#f59e0b",
 	Entertainment: "#8b5cf6",
+	Shopping: "#ec4899",
+	Health: "#ef4444",
+	Other: "#6b7280",
+};
+
+const getCategoryColor = (category: string) => {
+	return CATEGORY_COLORS[category] || "#94a3b8";
 };
 
 export default function CategoryPieChart({ data }: CategoryPieChartProps) {
@@ -20,10 +27,7 @@ export default function CategoryPieChart({ data }: CategoryPieChartProps) {
 						{data.name}
 					</p>
 					<p className="text-sm text-gray-600 dark:text-gray-300">
-						Amount: ${data.value.toFixed(2)}
-					</p>
-					<p className="text-sm text-gray-600 dark:text-gray-300">
-						Percentage: {data.percentage?.toFixed(1)}%
+						${data.value.toFixed(2)} ({data.percentage?.toFixed(1)}%)
 					</p>
 				</div>
 			);
@@ -42,14 +46,15 @@ export default function CategoryPieChart({ data }: CategoryPieChartProps) {
 						data={data}
 						cx="50%"
 						cy="50%"
-						labelLine={false}
+						innerRadius={60}
 						outerRadius={100}
-						fill="#8884d8"
+						paddingAngle={5}
 						dataKey="value">
 						{data.map((entry, index) => (
 							<Cell
 								key={`cell-${index}`}
-								fill={COLORS[entry.name as keyof typeof COLORS] || "#8884d8"}
+								fill={getCategoryColor(entry.name)}
+								strokeWidth={0}
 							/>
 						))}
 					</Pie>

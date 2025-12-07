@@ -22,14 +22,14 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${inter.className} min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300`}>
+				className={`${inter.className} min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300 selection:bg-emerald-500/30`}>
 				<FinanceProvider>
 					<ThemeProvider>
-						<div className="max-w-7xl mx-auto px-4 py-6">
+						<div className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-6">
 							<Header />
 							<div className="flex gap-6">
 								<Sidebar />
-								<main className="flex-1">{children}</main>
+								<main className="flex-1 min-w-0">{children}</main>
 							</div>
 							<MobileNav />
 						</div>
