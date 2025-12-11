@@ -61,7 +61,7 @@ export default function BudgetsPage() {
 				// Empty State
 				<div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200 dark:border-slate-700">
 					<p className="text-gray-500 dark:text-gray-400">
-						You haven't set any budgets yet.
+						You haven&apos;t set any budgets yet.
 					</p>
 					<button
 						onClick={() => setShowAddModal(true)}
