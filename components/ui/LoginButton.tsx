@@ -4,6 +4,7 @@ import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { useFinanceContext } from "@/context/FinanceContext";
 import { LogOut } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginButton() {
 	const { user } = useFinanceContext();
@@ -23,10 +24,12 @@ export default function LoginButton() {
 	if (user) {
 		return (
 			<div className="flex items-center gap-3">
-				<img
+				<Image
 					src={user.photoURL || ""}
 					alt="Profile"
 					className="w-8 h-8 rounded-full border border-gray-200 dark:border-slate-700"
+					width={300}
+					height={300}
 				/>
 				<button
 					onClick={handleLogout}
