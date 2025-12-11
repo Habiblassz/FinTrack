@@ -16,14 +16,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 			? financialData.budgets.map((b) => b.category)
 			: ["Uncategorized"];
 
-	const INITIAL_STATE = {
+	const [formData, setFormData] = useState({
 		name: "",
 		amount: "",
 		category: availableCategories[0],
 		date: new Date().toISOString().split("T")[0],
-	};
+	});
 
-	const [formData, setFormData] = useState(INITIAL_STATE);
 	const [errors, setErrors] = useState<{
 		name?: string;
 		amount?: string;
@@ -39,12 +38,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 				date: initialData.date,
 			});
 		} else {
-			setFormData(INITIAL_STATE);
+			setFormData({
+				name: "",
+				amount: "",
+				category: availableCategories[0],
+				date: new Date().toISOString().split("T")[0],
+			});
 		}
 	}, [initialData]);
 
 	const validate = () => {
-		const newErrors: any = {};
+		const newErrors: Record<string, string> = {};
 		if (!formData.name.trim()) newErrors.name = "Expense name is required";
 		if (!formData.amount || parseFloat(formData.amount) <= 0)
 			newErrors.amount = "Amount must be greater than 0";
@@ -67,7 +71,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
 		if (!initialData) {
 			setFormData({
-				...INITIAL_STATE,
+				name: "",
+				amount: "",
+				category: availableCategories[0],
 				date: new Date().toISOString().split("T")[0],
 			});
 		}
