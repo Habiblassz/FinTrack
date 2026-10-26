@@ -9,6 +9,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { FinancialDataSchema } from "@/lib/schemas";
 
 const DEFAULT_DATA: FinancialData = {
 	expenses: [],
@@ -52,12 +53,23 @@ export const useFinance = () => {
 		return () => unsubscribe();
 	}, [user]);
 
-	const saveData = async (newData: FinancialData) => {
-		if (!user) return;
+	type SaveResult = { success: true } | { success: false; error: any };
+
+	const saveData = async (newData: FinancialData): Promise<SaveResult> => {
+		if (!user) return { success: false, error: "Unauthenticated" };
+
+		// 1. Validate the data at the boundary
+		const validation = FinancialDataSchema.safeParse(newData);
+		if (!validation.success) {
+			return { success: false, error: validation.error };
+		}
+
+		// 2. Safely write to Firestore
 		try {
-			await setDoc(doc(db, "users", user.uid), newData);
+			await setDoc(doc(db, "users", user.uid), validation.data);
+			return { success: true };
 		} catch (error) {
-			console.error("Error saving data:", error);
+			return { success: false, error };
 		}
 	};
 
@@ -113,7 +125,7 @@ export const useFinance = () => {
 		const newData = {
 			...financialData,
 			budgets: financialData.budgets.map((b) =>
-				b.category === category ? { ...b, budget } : b
+				b.category === category ? { ...b, budget } : b,
 			),
 		};
 		saveData(newData);
@@ -136,7 +148,7 @@ export const useFinance = () => {
 		const newData = {
 			...financialData,
 			expenses: financialData.expenses.map((e) =>
-				e.id === id ? { ...updatedExpense, id } : e
+				e.id === id ? { ...updatedExpense, id } : e,
 			),
 			currentSavings: financialData.currentSavings + amountDiff,
 		};
@@ -153,7 +165,7 @@ export const useFinance = () => {
 
 		const totalImportAmount = expensesToAdd.reduce(
 			(sum, e) => sum + e.amount,
-			0
+			0,
 		);
 
 		const newData = {
@@ -168,22 +180,22 @@ export const useFinance = () => {
 	const calculations = useMemo(() => {
 		const currentMonthISO = getCurrentMonthISO();
 		const monthlyExpenses = financialData.expenses.filter((e) =>
-			e.date.startsWith(currentMonthISO)
+			e.date.startsWith(currentMonthISO),
 		);
 
 		const totalMonthlyExpenses = monthlyExpenses.reduce(
 			(sum, exp) => sum + exp.amount,
-			0
+			0,
 		);
 
 		const trendData = calculateTrendData(
 			financialData.expenses,
-			financialData.monthlyIncome
+			financialData.monthlyIncome,
 		);
 		const categorySpending = calculateCategorySpending(financialData.expenses);
 		const savingsRate = calculateSavingsRate(
 			financialData.monthlyIncome,
-			totalMonthlyExpenses
+			totalMonthlyExpenses,
 		);
 
 		return {
@@ -198,7 +210,7 @@ export const useFinance = () => {
 	const budgetsWithLiveSpending = financialData.budgets.map((b) => {
 		const currentMonthISO = getCurrentMonthISO();
 		const monthlyExpenses = financialData.expenses.filter((e) =>
-			e.date.startsWith(currentMonthISO)
+			e.date.startsWith(currentMonthISO),
 		);
 		const spentThisMonth = monthlyExpenses
 			.filter((e) => e.category === b.category)
