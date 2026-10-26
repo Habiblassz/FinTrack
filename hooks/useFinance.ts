@@ -53,7 +53,7 @@ export const useFinance = () => {
 		return () => unsubscribe();
 	}, [user]);
 
-	type SaveResult = { success: true } | { success: false; error: any };
+	type SaveResult = { success: true } | { success: false; error: unknown };
 
 	const saveData = async (newData: FinancialData): Promise<SaveResult> => {
 		if (!user) return { success: false, error: "Unauthenticated" };
