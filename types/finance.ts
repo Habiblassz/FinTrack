@@ -159,5 +159,9 @@ export interface ExpenseListProps {
 	onEdit: (expense: Expense) => void;
 }
 
-export interface MobileNavProps {}
-export interface SidebarProps {}
+export interface MobileNavProps {
+	className?: string;
+}
+export interface SidebarProps {
+	className?: string;
+}

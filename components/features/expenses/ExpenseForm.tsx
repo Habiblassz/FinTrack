@@ -38,14 +38,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 				date: initialData.date,
 			});
 		} else {
+			const defaultCategory =
+				financialData.budgets.length > 0
+					? financialData.budgets[0].category
+					: "Uncategorized";
+
 			setFormData({
 				name: "",
 				amount: "",
-				category: availableCategories[0],
+				category: defaultCategory,
 				date: new Date().toISOString().split("T")[0],
 			});
 		}
-	}, [initialData]);
+	}, [initialData, financialData.budgets]);
 
 	const validate = () => {
 		const newErrors: Record<string, string> = {};
