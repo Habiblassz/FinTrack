@@ -19,3 +19,11 @@ This project is built with a modern React stack, prioritizing clear separation o
 Ensure you have Node.js installed, then run:
 ```bash
 npm install
+
+## Quick Start (Docker)
+Run the entire application in an isolated container without local dependencies:
+`docker-compose up --build`
+The app connects to local Firebase emulators (`NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true`) by default, requiring no external database credentials.
+
+## Testing
+**Important:** The test suite runs entirely offline. All Firebase dependencies are mocked. You do not need a live Firebase project or a `.env` file to run `npm run test:coverage`.
