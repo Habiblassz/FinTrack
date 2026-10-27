@@ -8,5 +8,15 @@ export default defineConfig({
 		environment: "jsdom",
 		globals: true,
 		setupFiles: "./vitest.setup.ts",
+		coverage: {
+			provider: "v8",
+			reporter: ["text", "lcov"],
+			thresholds: {
+				lines: 50,
+				statements: 50,
+				branches: 50,
+				functions: 50,
+			},
+		},
 	},
 });
