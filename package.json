@@ -11,6 +11,7 @@
 		"test:coverage": "vitest run --coverage"
 	},
 	"overrides": {
+		"@grpc/grpc-js": "^1.13.6",
 		"protobufjs": "^7.6.6",
 		"postcss": "^8.5.23"
 	},
