@@ -2,6 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useFinance } from "./useFinance";
 import { setDoc } from "firebase/firestore";
+import { logger } from "@/lib/logger";
+
+// Mock the new logger
+vi.mock("@/lib/logger", () => ({
+	logger: {
+		error: vi.fn(),
+		info: vi.fn(),
+		warn: vi.fn(),
+	},
+}));
 
 // Mock Firebase dependencies
 vi.mock("@/lib/firebase", () => ({
@@ -91,5 +101,33 @@ describe("useFinance Hook Validation", () => {
 		await expect(
 			result.current.importExpenses(invalidData),
 		).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
+	});
+
+	it("logs a structured error when Firestore write fails", async () => {
+		const { result } = renderHook(() => useFinance());
+
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		});
+
+		// Force setDoc to throw an error on the next call
+		vi.mocked(setDoc).mockRejectedValueOnce(
+			new Error("Simulated Firestore Timeout"),
+		);
+
+		// Trigger a write with valid data
+		await act(async () => {
+			result.current.addExpense({
+				name: "Valid Expense",
+				amount: 50,
+				category: "Food",
+				date: "2023-10-10",
+			});
+		});
+
+		expect(logger.error).toHaveBeenCalledWith("firestore_write_failed", {
+			error: "Simulated Firestore Timeout",
+			userId: "test-user-123",
+		});
 	});
 });
