@@ -75,4 +75,21 @@ describe("useFinance Hook Validation", () => {
 		// setDoc should be called once for DEFAULT_DATA, and once for the valid expense
 		expect(setDoc).toHaveBeenCalledTimes(2);
 	});
+
+	it("throws an AppError with code VALIDATION_FAILED for invalid imports", async () => {
+		const { result } = renderHook(() => useFinance());
+
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		});
+
+		// Attempt to import a negative expense
+		const invalidData = [
+			{ name: "Bad", amount: -100, category: "Food", date: "2023-10-10" },
+		];
+
+		await expect(
+			result.current.importExpenses(invalidData),
+		).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
+	});
 });

@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import { Upload, X, FileText, AlertCircle, Check } from "lucide-react";
 import { Expense } from "@/types/finance";
+import { AppError } from "@/lib/errors";
 
 interface CsvImportModalProps {
 	isOpen: boolean;
@@ -79,7 +80,7 @@ export default function CsvImportModal({
 
 					if (parsedExpenses.length === 0) {
 						setError(
-							"No valid expenses found. Check your CSV columns (Name, Amount, Category, Date)."
+							"No valid expenses found. Check your CSV columns (Name, Amount, Category, Date).",
 						);
 						setIsImporting(false);
 						return;
@@ -90,8 +91,11 @@ export default function CsvImportModal({
 					setFile(null);
 					setPreview([]);
 				} catch (err) {
-					console.error(err);
-					setError("Import failed. Please try again.");
+					if (err instanceof AppError) {
+						setError(`Import failed: ${err.message}`);
+					} else {
+						setError("Import failed. Please try again.");
+					}
 				} finally {
 					setIsImporting(false);
 				}

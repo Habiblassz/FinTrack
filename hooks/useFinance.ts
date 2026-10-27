@@ -10,6 +10,7 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { FinancialDataSchema } from "@/lib/schemas";
+import { AppError } from "@/lib/errors";
 
 const DEFAULT_DATA: FinancialData = {
 	expenses: [],
@@ -56,20 +57,34 @@ export const useFinance = () => {
 	type SaveResult = { success: true } | { success: false; error: unknown };
 
 	const saveData = async (newData: FinancialData): Promise<SaveResult> => {
-		if (!user) return { success: false, error: "Unauthenticated" };
+		if (!user)
+			return {
+				success: false,
+				error: new AppError("AUTH_REQUIRED", "Unauthenticated"),
+			};
 
-		// 1. Validate the data at the boundary
 		const validation = FinancialDataSchema.safeParse(newData);
 		if (!validation.success) {
-			return { success: false, error: validation.error };
+			return {
+				success: false,
+				error: new AppError(
+					"VALIDATION_FAILED",
+					"Invalid financial data format",
+				),
+			};
 		}
 
-		// 2. Safely write to Firestore
 		try {
 			await setDoc(doc(db, "users", user.uid), validation.data);
 			return { success: true };
-		} catch (error) {
-			return { success: false, error };
+		} catch (error: any) {
+			return {
+				success: false,
+				error: new AppError(
+					"NETWORK_ERROR",
+					error.message || "Firestore write failed",
+				),
+			};
 		}
 	};
 
@@ -156,7 +171,7 @@ export const useFinance = () => {
 	};
 
 	const importExpenses = async (newExpenses: Omit<Expense, "id">[]) => {
-		if (!user) return;
+		if (!user) throw new AppError("AUTH_REQUIRED", "Unauthenticated");
 
 		const expensesToAdd = newExpenses.map((e) => ({
 			...e,
@@ -174,7 +189,10 @@ export const useFinance = () => {
 			currentSavings: financialData.currentSavings - totalImportAmount,
 		};
 
-		await saveData(newData);
+		const result = await saveData(newData);
+		if (!result.success) {
+			throw result.error;
+		}
 	};
 
 	const calculations = useMemo(() => {
