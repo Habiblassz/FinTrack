@@ -134,5 +134,18 @@ describe("Calculations Utilities", () => {
 			expect(transport?.value).toBe(500);
 			expect(transport?.percentage).toBe(50); // 500 out of 1000 total
 		});
+		it("handles zero total expenses without division by zero", () => {
+			const expenses = [
+				{
+					id: "1",
+					name: "Zero",
+					amount: 0,
+					date: "2023-05-01",
+					category: "Food",
+				},
+			];
+			const result = calculateCategorySpending(expenses);
+			expect(result[0].percentage).toBe(0);
+		});
 	});
 });
