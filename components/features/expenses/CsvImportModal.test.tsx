@@ -13,7 +13,7 @@ vi.mock("papaparse", () => ({
 
 // Mock react-dropzone to easily simulate file drops
 vi.mock("react-dropzone", () => ({
-	useDropzone: ({ onDrop }: any) => ({
+	useDropzone: ({ onDrop }: { onDrop: (files: File[]) => void }) => ({
 		getRootProps: () => ({
 			onClick: () =>
 				onDrop([new File(["dummy"], "test.csv", { type: "text/csv" })]),
@@ -41,25 +41,27 @@ describe("CsvImportModal", () => {
 		);
 
 		// Mock Papa.parse to immediately call 'complete' with our mock data
-		(Papa.parse as any).mockImplementation((file: any, config: any) => {
-			config.complete({
-				data: [
-					{
-						Name: "Valid Expense",
-						Amount: "50",
-						Category: "Food",
-						Date: "2023-10-10",
-					},
-					{ Name: "", Amount: "20", Category: "Rent", Date: "2023-10-11" }, // Invalid (no name)
-					{
-						Name: "Free Item",
-						Amount: "0",
-						Category: "Other",
-						Date: "2023-10-12",
-					}, // Invalid (zero amount)
-				],
-			});
-		});
+		(Papa.parse as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+			(_file: unknown, config: { complete: (res: unknown) => void }) => {
+				config.complete({
+					data: [
+						{
+							Name: "Valid Expense",
+							Amount: "50",
+							Category: "Food",
+							Date: "2023-10-10",
+						},
+						{ Name: "", Amount: "20", Category: "Rent", Date: "2023-10-11" }, // Invalid (no name)
+						{
+							Name: "Free Item",
+							Amount: "0",
+							Category: "Other",
+							Date: "2023-10-12",
+						}, // Invalid (zero amount)
+					],
+				});
+			},
+		);
 
 		// Click the dropzone area (our mock triggers onDrop)
 		fireEvent.click(screen.getByText(/drag & drop your csv here/i));

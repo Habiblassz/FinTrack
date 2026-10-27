@@ -77,13 +77,12 @@ export const useFinance = () => {
 		try {
 			await setDoc(doc(db, "users", user.uid), validation.data);
 			return { success: true };
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Firestore write failed";
 			return {
 				success: false,
-				error: new AppError(
-					"NETWORK_ERROR",
-					error.message || "Firestore write failed",
-				),
+				error: new AppError("NETWORK_ERROR", errorMessage),
 			};
 		}
 	};

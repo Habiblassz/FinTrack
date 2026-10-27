@@ -16,7 +16,7 @@ describe("ExpenseForm", () => {
 		vi.clearAllMocks();
 		vi.spyOn(FinanceContext, "useFinanceContext").mockReturnValue({
 			financialData: { budgets: [{ category: "Food", budget: 500, spent: 0 }] },
-		} as any);
+		} as unknown as ReturnType<typeof FinanceContext.useFinanceContext>);
 	});
 
 	it("shows validation errors for empty name and non-positive amount", () => {
