@@ -21,3 +21,5 @@ export const FinancialDataSchema = z.object({
 	savingsGoal: z.number().nonnegative(),
 	currentSavings: z.number(),
 });
+
+export const ExpenseInputSchema = ExpenseSchema.omit({ id: true });

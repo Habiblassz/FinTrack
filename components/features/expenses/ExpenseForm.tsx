@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ExpenseFormProps } from "@/types/finance";
 import { useFinanceContext } from "@/context/FinanceContext";
+import { ExpenseInputSchema } from "@/lib/schemas";
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 	initialData,
@@ -12,7 +13,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 	const { financialData } = useFinanceContext();
 
 	const availableCategories =
-		financialData.budgets.length > 0
+		financialData?.budgets?.length > 0
 			? financialData.budgets.map((b) => b.category)
 			: ["Uncategorized"];
 
@@ -39,28 +40,41 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 			});
 		} else {
 			const defaultCategory =
-				financialData.budgets.length > 0
+				financialData?.budgets?.length > 0
 					? financialData.budgets[0].category
 					: "Uncategorized";
 
-			setFormData({
-				name: "",
-				amount: "",
+			setFormData((prev) => ({
+				...prev,
 				category: defaultCategory,
-				date: new Date().toISOString().split("T")[0],
-			});
+			}));
 		}
-	}, [initialData, financialData.budgets]);
+	}, [initialData, financialData?.budgets]);
 
 	const validate = () => {
-		const newErrors: Record<string, string> = {};
-		if (!formData.name.trim()) newErrors.name = "Expense name is required";
-		if (!formData.amount || parseFloat(formData.amount) <= 0)
-			newErrors.amount = "Amount must be greater than 0";
-		if (!formData.date) newErrors.date = "Date is required";
+		const parsedAmount = parseFloat(formData.amount);
 
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
+		const result = ExpenseInputSchema.safeParse({
+			name: formData.name.trim(),
+			amount: isNaN(parsedAmount) ? -1 : parsedAmount,
+			category: formData.category,
+			date: formData.date,
+		});
+
+		if (!result.success) {
+			const newErrors: Record<string, string> = {};
+			result.error.issues.forEach((issue) => {
+				const path = issue.path[0] as string;
+				if (!newErrors[path]) {
+					newErrors[path] = issue.message;
+				}
+			});
+			setErrors(newErrors);
+			return false;
+		}
+
+		setErrors({});
+		return true;
 	};
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +82,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 		if (!validate()) return;
 
 		onSubmit({
-			name: formData.name,
+			name: formData.name.trim(),
 			amount: parseFloat(formData.amount),
 			category: formData.category,
 			date: formData.date,
@@ -95,7 +109,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 			<h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
 				{initialData ? "Edit Expense" : "Add New Expense"}
 			</h3>
-			<form onSubmit={handleSubmit} className="space-y-4">
+			<form
+				onSubmit={handleSubmit}
+				className="space-y-4"
+				data-testid="expense-form">
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
 						<label className={labelClass}>Expense Name</label>
@@ -110,6 +127,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 							}`}
 							placeholder="e.g. Groceries"
 							autoFocus={!initialData}
+							data-testid="expense-name-input"
 						/>
 						{errors.name && <p className={errorClass}>{errors.name}</p>}
 					</div>
@@ -130,6 +148,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 									errors.amount ? "border-red-500 focus:ring-red-500" : ""
 								}`}
 								placeholder="0.00"
+								data-testid="expense-amount-input"
 							/>
 						</div>
 						{errors.amount && <p className={errorClass}>{errors.amount}</p>}
@@ -141,7 +160,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 							onChange={(e) =>
 								setFormData({ ...formData, category: e.target.value })
 							}
-							className={inputClass}>
+							className={inputClass}
+							data-testid="expense-category-input">
 							{availableCategories.map((cat) => (
 								<option key={cat} value={cat}>
 									{cat}
@@ -160,6 +180,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 							className={`${inputClass} ${
 								errors.date ? "border-red-500 focus:ring-red-500" : ""
 							}`}
+							data-testid="expense-date-input"
 						/>
 						{errors.date && <p className={errorClass}>{errors.date}</p>}
 					</div>
