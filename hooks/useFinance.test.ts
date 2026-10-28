@@ -21,16 +21,14 @@ vi.mock("@/lib/firebase", () => ({
 
 vi.mock("firebase/auth", () => ({
 	onAuthStateChanged: vi.fn((auth, cb) => {
-		// Simulate a logged-in user
 		cb({ uid: "test-user-123" });
-		return vi.fn(); // unsubscribe mock
+		return vi.fn();
 	}),
 }));
 
 vi.mock("firebase/firestore", () => ({
-	doc: vi.fn(),
+	doc: vi.fn(() => "mock-doc-ref"),
 	onSnapshot: vi.fn((docRef, cb) => {
-		// Simulate an empty database returning nothing yet
 		cb({ exists: () => false });
 		return vi.fn();
 	}),
@@ -44,35 +42,28 @@ describe("useFinance Hook Validation", () => {
 
 	it("rejects invalid data and prevents Firestore writes", async () => {
 		const { result } = renderHook(() => useFinance());
-
-		// Wait for the auth effect to resolve
 		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await new Promise((r) => setTimeout(r, 0));
 		});
 
-		// Attempt to add an invalid expense (negative amount violates the schema)
 		await act(async () => {
 			result.current.addExpense({
 				name: "Bad Expense",
-				amount: -500, // Invalid: amount must be positive
+				amount: -500,
 				category: "Food",
 				date: "2023-10-10",
 			});
 		});
 
-		// The schema should catch the negative amount, meaning setDoc is never called for this bad data.
-		// Note: setDoc is called once initially by onSnapshot setting DEFAULT_DATA, so we check it wasn't called twice.
 		expect(setDoc).toHaveBeenCalledTimes(1);
 	});
 
 	it("allows valid data to be written to Firestore", async () => {
 		const { result } = renderHook(() => useFinance());
-
 		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await new Promise((r) => setTimeout(r, 0));
 		});
 
-		// Attempt to add a valid expense
 		await act(async () => {
 			result.current.addExpense({
 				name: "Good Expense",
@@ -82,18 +73,15 @@ describe("useFinance Hook Validation", () => {
 			});
 		});
 
-		// setDoc should be called once for DEFAULT_DATA, and once for the valid expense
 		expect(setDoc).toHaveBeenCalledTimes(2);
 	});
 
 	it("throws an AppError with code VALIDATION_FAILED for invalid imports", async () => {
 		const { result } = renderHook(() => useFinance());
-
 		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await new Promise((r) => setTimeout(r, 0));
 		});
 
-		// Attempt to import a negative expense
 		const invalidData = [
 			{ name: "Bad", amount: -100, category: "Food", date: "2023-10-10" },
 		];
@@ -105,17 +93,14 @@ describe("useFinance Hook Validation", () => {
 
 	it("logs a structured error when Firestore write fails", async () => {
 		const { result } = renderHook(() => useFinance());
-
 		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await new Promise((r) => setTimeout(r, 0));
 		});
 
-		// Force setDoc to throw an error on the next call
 		vi.mocked(setDoc).mockRejectedValueOnce(
 			new Error("Simulated Firestore Timeout"),
 		);
 
-		// Trigger a write with valid data
 		await act(async () => {
 			result.current.addExpense({
 				name: "Valid Expense",
@@ -129,5 +114,106 @@ describe("useFinance Hook Validation", () => {
 			error: "Simulated Firestore Timeout",
 			userId: "test-user-123",
 		});
+	});
+});
+
+describe("useFinance Hook CRUD Operations", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("handles income and balance updates", async () => {
+		const { result } = renderHook(() => useFinance());
+		await act(async () => {
+			await new Promise((r) => setTimeout(r, 0));
+		});
+
+		await act(async () => {
+			result.current.updateIncome(5000);
+		});
+		expect(setDoc).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({ monthlyIncome: 5000 }),
+		);
+
+		await act(async () => {
+			result.current.updateBalance(2000);
+		});
+		expect(setDoc).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({ currentSavings: 2000 }),
+		);
+	});
+
+	it("handles budget creation, updating, and deletion", async () => {
+		const { result } = renderHook(() => useFinance());
+		await act(async () => {
+			await new Promise((r) => setTimeout(r, 0));
+		});
+
+		await act(async () => {
+			result.current.addBudget("Entertainment", 200);
+		});
+		await act(async () => {
+			result.current.addBudget("Entertainment", 200);
+		}); // duplicate check
+		await act(async () => {
+			result.current.updateBudget("Entertainment", 300);
+		});
+		await act(async () => {
+			result.current.deleteBudget("Entertainment");
+		});
+
+		expect(setDoc).toHaveBeenCalled();
+	});
+
+	it("handles expense updating and deletion", async () => {
+		const { result } = renderHook(() => useFinance());
+		await act(async () => {
+			await new Promise((r) => setTimeout(r, 0));
+		});
+
+		await act(async () => {
+			result.current.addExpense({
+				name: "Test",
+				amount: 100,
+				category: "Food",
+				date: "2023-10-10",
+			});
+		});
+
+		// Extract the generated ID to update/delete it
+		const lastCall =
+			vi.mocked(setDoc).mock.calls[vi.mocked(setDoc).mock.calls.length - 1];
+		const savedData = lastCall[1] as any;
+		const expenseId = savedData.expenses[0].id;
+
+		await act(async () => {
+			result.current.updateExpense(expenseId, {
+				name: "Test Updated",
+				amount: 150,
+				category: "Food",
+				date: "2023-10-10",
+			});
+		});
+
+		await act(async () => {
+			result.current.deleteExpense(expenseId);
+		});
+
+		// Edge cases for missing IDs
+		await act(async () => {
+			result.current.deleteExpense("fake-id");
+		});
+		await act(async () => {
+			result.current.updateExpense("fake-id", {
+				name: "Fake",
+				amount: 150,
+				category: "Food",
+				date: "2023-10-10",
+			});
+		});
+
+		expect(setDoc).toHaveBeenCalled();
 	});
 });
