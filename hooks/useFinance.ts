@@ -11,6 +11,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { FinancialDataSchema } from "@/lib/schemas";
 import { AppError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 const DEFAULT_DATA: FinancialData = {
 	expenses: [],
@@ -80,6 +81,12 @@ export const useFinance = () => {
 		} catch (error: unknown) {
 			const errorMessage =
 				error instanceof Error ? error.message : "Firestore write failed";
+
+			logger.error("firestore_write_failed", {
+				error: errorMessage,
+				userId: user.uid,
+			});
+
 			return {
 				success: false,
 				error: new AppError("NETWORK_ERROR", errorMessage),
