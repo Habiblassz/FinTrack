@@ -4,7 +4,6 @@ import { useFinance } from "./useFinance";
 import { setDoc } from "firebase/firestore";
 import { logger } from "@/lib/logger";
 
-// Mock the new logger
 vi.mock("@/lib/logger", () => ({
 	logger: {
 		error: vi.fn(),
@@ -13,7 +12,6 @@ vi.mock("@/lib/logger", () => ({
 	},
 }));
 
-// Mock Firebase dependencies
 vi.mock("@/lib/firebase", () => ({
 	auth: {},
 	db: {},
@@ -152,7 +150,17 @@ describe("useFinance Hook CRUD Operations", () => {
 		});
 
 		await act(async () => {
-			result.current.addBudget("Entertainment", 200);
+			result.current.setFinancialData({
+				expenses: [],
+				budgets: [{ category: "Entertainment", budget: 200, spent: 0 }],
+				monthlyIncome: 0,
+				savingsGoal: 0,
+				currentSavings: 0,
+			});
+		});
+
+		await act(async () => {
+			result.current.addBudget("Food", 100);
 		});
 		await act(async () => {
 			result.current.addBudget("Entertainment", 200);
@@ -174,34 +182,35 @@ describe("useFinance Hook CRUD Operations", () => {
 		});
 
 		await act(async () => {
-			result.current.addExpense({
-				name: "Test",
-				amount: 100,
-				category: "Food",
-				date: "2023-10-10",
+			result.current.setFinancialData({
+				expenses: [
+					{
+						id: "test-id",
+						name: "Test",
+						amount: 100,
+						category: "Food",
+						date: "2023-10-10",
+					},
+				],
+				budgets: [],
+				monthlyIncome: 0,
+				savingsGoal: 0,
+				currentSavings: 1000,
 			});
 		});
 
-		// Extract the generated ID to update/delete it
-		const lastCall =
-			vi.mocked(setDoc).mock.calls[vi.mocked(setDoc).mock.calls.length - 1];
-		const savedData = lastCall[1] as any;
-		const expenseId = savedData.expenses[0].id;
-
 		await act(async () => {
-			result.current.updateExpense(expenseId, {
+			result.current.updateExpense("test-id", {
 				name: "Test Updated",
 				amount: 150,
 				category: "Food",
 				date: "2023-10-10",
 			});
 		});
-
 		await act(async () => {
-			result.current.deleteExpense(expenseId);
+			result.current.deleteExpense("test-id");
 		});
 
-		// Edge cases for missing IDs
 		await act(async () => {
 			result.current.deleteExpense("fake-id");
 		});
